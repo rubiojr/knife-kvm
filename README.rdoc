@@ -1,14 +1,21 @@
 = Knife KVM
 
+http://github.com/rubiojr/knife-kvm
+
 = DESCRIPTION:
 
 This is the unofficial Opscode Knife plugin for KVM. This plugin gives knife the ability to create, bootstrap, and manage virtual machines in a Linux KVM host.
 
-You'll need an KVM host with SSH enabled and a privileged user account to connect to it via SSH:
+= PRE-REQUISITES
 
-You'll also need a special VM template (in QCOW2/RAW) with CentOS/Ubuntu/Fedora and installed.
+* You'll need an KVM host with SSH enabled and a privileged user account to connect to it via SSH
+* libguestfs-tools (virt-cat in particular) installed in the hypervisor host
+* A special VM template (in QCOW2/RAW) with CentOS/Ubuntu/Fedora and installed. I've got a couple of them to share:
 
-http://github.com/rubiojr/knife-kvm
+    - http://download.frameos.org/appliances/centos5-jeos-ip-info.qcow2
+    - http://download.frameos.org/appliances/centos6-jeos-with-ip-info.qcow2
+
+  This templates have a script that run when the OS boots and writes all the ip addresses available in the guest to the /tmp/ip-info file
 
 = INSTALLATION:
 
