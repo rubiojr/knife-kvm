@@ -1,0 +1,75 @@
+= Knife KVM
+
+= DESCRIPTION:
+
+This is the unofficial Opscode Knife plugin for KVM. This plugin gives knife the ability to create, bootstrap, and manage virtual machines in a VMWare KVM host.
+
+You'll need an KVM host with SSH enabled and a privileged user account to connect to it via SSH:
+
+You'll also need a special VM template (in QCOW2/RAW) with CentOS/Ubuntu/Fedora and installed.
+
+http://github.com/rubiojr/knife-kvm
+
+= INSTALLATION:
+
+Be sure you are running the latest version Chef. Versions earlier than 0.10.0 don't support plugins:
+
+    gem install chef
+
+This plugin is distributed as a Ruby Gem. To install it, run:
+
+    gem install knife-kvm
+
+Depending on your system's configuration, you may need to run this command with root privileges.
+
+= CONFIGURATION:
+
+In order to communicate with the KVM Cloud API you will have to tell Knife about your Username and API Key.  The easiest way to accomplish this is to create some entries in your <tt>knife.rb</tt> file:
+
+    knife[:kvm_host] = "Your KVM host address"
+    knife[:kvm_username]  = "root"
+    knife[:kvm_password]  = "secret"
+
+You also have the option of passing your KVM Host/Username/Password into the individual knife subcommands using the <tt>--kvm-host</tt> <tt>--kvm-username</tt> and <tt>--kvm-password</tt> command options
+
+    # provision a new Ubuntu 11.10 VM
+    knife kvm vm create --template-file ~/.chef/bootstrap/ubuntu11.10-gems.erb \
+                        --vm-disk /path-to/ubuntu1110-x64-vmware-tools.vmdk \
+                        --vm-name knife-kvm-test-ubuntu \
+                        --datastore datastore1
+                        --kvm-host my-test-host \
+                        --kvm-password secret
+
+= SUBCOMMANDS:
+
+This plugin provides the following Knife subcommands.  Specific command options can be found by invoking the subcommand with a <tt>--help</tt> flag
+
+== knife kvm vm create
+
+Provisions a new virtual machine in the KVM host and then perform a Chef bootstrap (using the SSH protocol).  The goal of the bootstrap is to get Chef installed on the target system so it can run Chef Client with a Chef Server. The main assumption is a baseline OS installation exists (provided by the provisioning). It is primarily intended for Chef Client systems that talk to a Chef server.  By default the virtual machine is bootstrapped using the {ubuntu10.04-gems}[https://github.com/opscode/chef/blob/master/chef/lib/chef/knife/bootstrap/ubuntu10.04-gems.erb] template.  This can be overridden using the <tt>-d</tt> or <tt>--template-file</tt> command options.
+
+== knife kvm vm delete
+
+Deletes an existing virtual machine in the currently configured KVM host by the virtual machine name. You can find the instance id by entering 'knife kvm vm list'. Please note - this does not delete the associated node and client objects from the Chef server.
+
+== knife kvm vm list
+
+Outputs a list of all virtual machines in the currently configured KVM host.  Please note - this shows all the virtual machines available in the KVM host, some of which may not be currently managed by the Chef server.
+
+= LICENSE:
+
+Author:: Sergio Rubio (<rubiojr@frameos.org>)
+Copyright:: Copyright (c) 2011 Sergio Rubio
+License:: Apache License, Version 2.0
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
