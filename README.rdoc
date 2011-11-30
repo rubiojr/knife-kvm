@@ -15,7 +15,7 @@ This is the unofficial Opscode Knife plugin for KVM. This plugin gives knife the
     - http://download.frameos.org/appliances/centos5-jeos-ip-info.qcow2
     - http://download.frameos.org/appliances/centos6-jeos-with-ip-info.qcow2
 
-  These templates have a script that is executed when the OS boots and writes all the ip addresses available in the guest to the /tmp/ip-info file (https://gist.github.com/1405266)
+  These templates have a script (ip-info) that is executed when the OS boots and writes all the ip addresses available in the guest to the /tmp/ip-info file (https://gist.github.com/1405266). This information is used to retrieve the VM ip addresses so that knife-kvm can bootstrap the Chef client.
 
 = INSTALLATION:
 
@@ -43,8 +43,11 @@ You also have the option of passing your KVM Host/Username/Password into the ind
     knife kvm vm create --template-file ~/.chef/bootstrap/ubuntu11.10-gems.erb \
                         --vm-disk /path-to/ubuntu1110-x64.qcow2 \
                         --vm-name knife-kvm-test-ubuntu \
-                        --pool default
+                        --ssh-user ubuntu \
+                        --ssh-password ubuntu \
+                        --pool default \
                         --kvm-host my-test-host \
+                        --kvm-user root \
                         --kvm-password secret
 
 = SUBCOMMANDS:
