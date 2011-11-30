@@ -2,7 +2,7 @@
 
 = DESCRIPTION:
 
-This is the unofficial Opscode Knife plugin for KVM. This plugin gives knife the ability to create, bootstrap, and manage virtual machines in a VMWare KVM host.
+This is the unofficial Opscode Knife plugin for KVM. This plugin gives knife the ability to create, bootstrap, and manage virtual machines in a Linux KVM host.
 
 You'll need an KVM host with SSH enabled and a privileged user account to connect to it via SSH:
 
@@ -34,9 +34,9 @@ You also have the option of passing your KVM Host/Username/Password into the ind
 
     # provision a new Ubuntu 11.10 VM
     knife kvm vm create --template-file ~/.chef/bootstrap/ubuntu11.10-gems.erb \
-                        --vm-disk /path-to/ubuntu1110-x64-vmware-tools.vmdk \
+                        --vm-disk /path-to/ubuntu1110-x64.qcow2 \
                         --vm-name knife-kvm-test-ubuntu \
-                        --datastore datastore1
+                        --pool default
                         --kvm-host my-test-host \
                         --kvm-password secret
 
