@@ -40,7 +40,7 @@ class Chef
                 confirm("Do you really want to delete this virtual machine '#{vm.name}'")
               end
 
-              vm.destroy
+              vm.destroy :destroy_volumes => true
               deleted << vm_name
               ui.warn("Deleted virtual machine #{vm.name}")
             end
