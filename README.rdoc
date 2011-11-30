@@ -15,7 +15,7 @@ This is the unofficial Opscode Knife plugin for KVM. This plugin gives knife the
     - http://download.frameos.org/appliances/centos5-jeos-ip-info.qcow2
     - http://download.frameos.org/appliances/centos6-jeos-with-ip-info.qcow2
 
-  This templates have a script that run when the OS boots and writes all the ip addresses available in the guest to the /tmp/ip-info file
+  These templates have a script that is executed when the OS boots and writes all the ip addresses available in the guest to the /tmp/ip-info file (https://gist.github.com/1405266)
 
 = INSTALLATION:
 
