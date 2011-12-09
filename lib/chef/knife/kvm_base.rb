@@ -55,6 +55,11 @@ class Chef
             :description => "Your KVM host address",
             :default => "127.0.0.1",
             :proc => Proc.new { |host| Chef::Config[:knife][:kvm_host] = host }
+          
+          option :libvirt_protocol,
+            :long => "--libvirt-protocol PROTO",
+            :description => "Libvirt connection protocol (default SSH)",
+            :default => "ssh"
         end
       end
 
@@ -64,13 +69,8 @@ class Chef
           host = Chef::Config[:knife][:kvm_host] || '127.0.0.1'
           username = Chef::Config[:knife][:kvm_username] 
           password = Chef::Config[:knife][:kvm_password]
-          libvirt_uri = ''
-          if host == "127.0.0.1"
-            libvirt_uri = "qemu+unix:///system"
-          else
-            libvirt_uri = "qemu+ssh://#{username}@#{host}/system"
-          end
-          ui.info "#{ui.color("Connecting to KVM host #{config[:kvm_host]}... ", :magenta)}"
+          libvirt_uri = "qemu+#{config[:libvirt_protocol]}://#{username}@#{host}/system"
+          ui.info "#{ui.color("Connecting to KVM host #{config[:kvm_host]} (#{config[:libvirt_protocol]})... ", :magenta)}"
           @connection = ::Fog::Compute.new :provider => 'libvirt',
                                          :libvirt_uri => libvirt_uri,
                                          :libvirt_ip_command => "virt-cat -d $server_name /tmp/ip-info 2> /dev/null |grep -v 127.0.0.1"

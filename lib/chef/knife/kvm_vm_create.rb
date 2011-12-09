@@ -26,6 +26,7 @@ class Chef
 
       deps do
         require 'readline'
+        require 'alchemist'
         require 'chef/json_compat'
         require 'chef/knife/bootstrap'
         Chef::Knife::Bootstrap.load_deps
@@ -35,7 +36,7 @@ class Chef
 
       option :vm_disk,
         :long => "--vm-disk FILE",
-        :description => "The path to the VMDK disk file"
+        :description => "The path to the QCOW2 disk file"
 
       option :vm_name,
         :long => "--vm-name NAME",
@@ -142,12 +143,12 @@ class Chef
         $stdout.sync = true
 
         unless config[:vm_disk]
-          ui.error("You have not provided a valid VMDK file. (--vm-disk)")
+          ui.error("You have not provided a valid QCOW2 file. (--vm-disk)")
           exit 1
         end
         
         if not File.exist?(config[:vm_disk])
-          ui.error("Invalid VMDK disk file (--vm-disk)")
+          ui.error("Invalid QCOW2 disk file (--vm-disk)")
           exit 1
         end
         
@@ -173,6 +174,7 @@ class Chef
                           #:autostart => true, # Starting guest automatically
                           :volume_pool_name => pool,
                           :network_interface_type => net_type,
+                          :memory_size => memory.to_i * 1024,
                           :network_bridge_name => net_if
 
         puts "#{ui.color("Importing VM disk... ", :magenta)}"
@@ -180,7 +182,7 @@ class Chef
         vm.start
         
         puts "#{ui.color("VM Name", :cyan)}: #{vm.name}"
-        puts "#{ui.color("VM Memory", :cyan)}: #{(vm.memory_size.to_f/1024/1024).round} MB"
+        puts "#{ui.color("VM Memory", :cyan)}: #{vm.memory_size.to_i.kilobytes.to.megabytes.round} MB"
 
         # wait for it to be ready to do stuff
         print "\n#{ui.color("Waiting server... ", :magenta)}"
