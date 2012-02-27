@@ -17,9 +17,116 @@
 #
 
 require 'chef/knife/kvm_base'
+require 'open4'
+require 'celluloid'
+require 'singleton'
 
 class Chef
   class Knife
+    class DeployScript
+
+      attr_reader :job_count
+
+      # Sample job
+      #---
+      #:test1:
+      #  'vm-memory':
+      #  'extra-args': 
+      #  'kvm-host':
+      #  'template-file': 
+      #  'vm-disk': 
+      #  'ssh-user':
+      #  'ssh-password': 
+      #  'run-list': 
+      #  'network-interface': 
+      def initialize(batch_file)
+        @batch_file = batch_file
+        @jobs = []
+        @job_count = 0 
+        (YAML.load_file batch_file).each do |i|
+          @jobs << DeployJob.new(i)
+          @job_count += 1
+        end
+      end
+
+      def each_job(&block)
+        @jobs.each do |j|
+          yield j
+        end
+      end
+
+    end
+
+    class CLogger
+      include Celluloid
+      include Singleton
+
+      def info(msg)
+        puts "INFO: #{msg}"
+      end
+
+      def error(msg)
+        $stderr.puts "ERROR: #{msg}"
+      end
+    end
+
+    class DeployJob
+
+      include Celluloid
+
+      attr_reader :name
+
+      def initialize(options)
+        @name, @options = options
+        validate
+      end
+
+      def validate
+        if @name.nil? or @name.empty?
+          raise Exception.new("Invalid job name")
+        end
+        if not @options['vm-disk'] or !File.exist?(@options['vm-disk'])
+          raise Exception.new("Invalid VM disk for job #{@name}.")
+        end
+      end
+
+      # returns [status, stdout, stderr]
+      def run
+        args = ""
+        extra_args = ""
+        @options.each do |k, v|
+          if k == 'extra-args'
+            extra_args << v
+          else
+            args << "--#{k} #{v} " unless k == 'extra-args'
+          end
+        end
+
+        #puts "DEBUG: knife kvm vm create #{args} #{extra_args}"
+        @out = ""
+        @err = ""
+        optstring = []
+        @options.each do |k,v|
+          optstring << "   - #{k}:".ljust(25) +  "#{v}\n" 
+        end
+        CLogger.instance.info! "Bootstrapping VM #{@name} \n#{optstring.join}"
+        @status = Open4.popen4("knife kvm vm create --vm-name #{@name} #{args} #{extra_args}") do |pid, stdin, stdout, stderr|
+          @out << stdout.read.strip
+          @err << stderr.read.strip
+        end
+        if @status == 0
+          CLogger.instance.info! "[#{@name}] deployment finished OK"
+        else
+          CLogger.instance.error! "[#{@name}] deployment FAILED"
+          @err.each_line do |l|
+            CLogger.instance.error! "[#{@name}] #{l.chomp}"
+          end
+        end
+        return @status, @out, @err 
+      end
+
+    end
+
     class KvmVmCreate < Knife
 
       include Knife::KVMBase
@@ -114,11 +221,29 @@ class Chef
         :default => false,
         :proc => Proc.new { true }
       
+      option :skip_bootstrap,
+        :long => "--skip-bootstrap",
+        :description => "Skip bootstrap process (Deploy only mode)",
+        :boolean => true,
+        :default => false,
+        :proc => Proc.new { true }
+      
+      option :async,
+        :long => "--async",
+        :description => "Deploy the VMs asynchronously (Ignored unless combined with --batch)",
+        :boolean => true,
+        :default => false,
+        :proc => Proc.new { true }
+      
       option :network_interface,
         :long => "--network-interface type:name",
         :description => "The network interface description (default bridge:br0)",
         :default => "bridge:br0"
       
+      option :batch,
+        :long => "--batch script.yml",
+        :description => "Use a batch file to deploy multiple VMs",
+        :default => nil
 
       def tcp_test_ssh(hostname)
         tcp_socket = TCPSocket.new(hostname, 22)
@@ -141,6 +266,38 @@ class Chef
 
       def run
         $stdout.sync = true
+
+        if config[:batch]
+          CLogger.instance.info "Running in batch mode. Extra arguments will be ignored."
+          if not config[:async]
+            counter = 0
+            script = DeployScript.new(config[:batch])
+            script.each_job do |job|
+              counter += 1
+              status, stdout, stderr = job.run
+              if status == 0 
+                puts 'Ok'
+              else
+                puts 'Failed'
+                stderr.each_line do |l|
+                  ui.error l
+                end
+              end
+            end
+          else
+            CLogger.instance.info! "Asynchronous boostrapping selected"
+            CLogger.instance.info! "Now do something productive while I finish my job ;)"
+            script = DeployScript.new(config[:batch])
+            futures = []
+            script.each_job do |job|
+              futures << job.future(:run)
+            end
+            futures.each do |f|
+              f.value
+            end
+          end
+          return
+        end
 
         unless config[:vm_disk]
           ui.error("You have not provided a valid QCOW2 file. (--vm-disk)")
@@ -184,6 +341,8 @@ class Chef
         puts "#{ui.color("VM Name", :cyan)}: #{vm.name}"
         puts "#{ui.color("VM Memory", :cyan)}: #{vm.memory_size.to_i.kilobytes.to.megabytes.round} MB"
 
+        return if config[:skip_bootstrap]
+
         # wait for it to be ready to do stuff
         print "\n#{ui.color("Waiting server... ", :magenta)}"
         timeout = 100
@@ -209,7 +368,8 @@ class Chef
 
         print "\n#{ui.color("Waiting for sshd... ", :magenta)}"
         print(".") until tcp_test_ssh(vm.public_ip_address) { sleep @initial_sleep_delay ||= 10; puts(" done") }
-        bootstrap_for_node(vm).run
+
+        bootstrap_for_node(vm).run 
 
         puts "\n"
         puts "#{ui.color("Name", :cyan)}: #{vm.name}"
