@@ -349,7 +349,7 @@ class Chef
         found = connection.servers.all.find { |v| v.name == vm.name }
         loop do 
           begin
-            if not vm.addresses.nil? and not vm.addresses.empty?
+            if not vm.public_ip_address.nil? and not vm.public_ip_address.empty?
               puts
               puts "\n#{ui.color("VM IP Address: #{vm.public_ip_address}", :cyan)}"
               break
