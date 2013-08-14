@@ -244,6 +244,19 @@ class Chef
         :long => "--batch script.yml",
         :description => "Use a batch file to deploy multiple VMs",
         :default => nil
+   
+      option :upload,
+        :long => "--upload",
+        :description => "Upload template to KVM Host",
+        :boolean => true,
+        :default => false,
+        :proc => Proc.new { true }
+
+      option :dst_dir,
+        :long => "--dst-dir FILE",
+        :description => "Destination folder for image"
+        :default => "/var/lib/libvirt/images/"
+        
 
       def tcp_test_ssh(hostname)
         tcp_socket = TCPSocket.new(hostname, 22)
@@ -319,7 +332,7 @@ class Chef
         memory = config[:memory]
         vm_disk = config[:vm_disk]
         os_type =config[:os_type]
-        destination_path = "/var/lib/libvirt/images/"
+        destination_path = config[:dst_dir]   #"/var/lib/libvirt/images/"
 
         #connection.remote_command "mkdir #{destination_path}"
         puts "#{ui.color("Creating VM... ", :magenta)}"
@@ -335,8 +348,14 @@ class Chef
                           :network_bridge_name => net_if
 
         puts "#{ui.color("Importing VM disk... ", :magenta)}"
-        upload_file(vm_disk, "#{destination_path}/#{vm_name}.qcow2") 
-        vm.start
+        
+        if not config[:upload]
+           copy_file(vm_disk, "#{destination_path}/#{vm_name}.qcow2")
+           vm.start
+        else
+           upload_file(vm_disk, "#{destination_path}/#{vm_name}.qcow2")
+           vm.start
+        end
         
         puts "#{ui.color("VM Name", :cyan)}: #{vm.name}"
         puts "#{ui.color("VM Memory", :cyan)}: #{vm.memory_size.to_i.kilobytes.to.megabytes.round} MB"
@@ -345,11 +364,11 @@ class Chef
 
         # wait for it to be ready to do stuff
         print "\n#{ui.color("Waiting server... ", :magenta)}"
-        timeout = 100
+        sleep 70
         found = connection.servers.all.find { |v| v.name == vm.name }
         loop do 
           begin
-            if not vm.addresses.nil? and not vm.addresses.empty?
+            if not vm.public_ip_address.nil? and not vm.public_ip_address.empty?
               puts
               puts "\n#{ui.color("VM IP Address: #{vm.public_ip_address}", :cyan)}"
               break
