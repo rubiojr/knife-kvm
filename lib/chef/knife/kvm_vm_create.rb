@@ -339,7 +339,7 @@ class Chef
         vm.start
         
         puts "#{ui.color("VM Name", :cyan)}: #{vm.name}"
-        puts "#{ui.color("VM Memory", :cyan)}: #{vm.memory_size.to_i.kilobytes.to.megabytes.round} MB"
+        puts "#{ui.color("VM Memory", :cyan)}: #{vm.memory_size/1024} MB"
 
         return if config[:skip_bootstrap]
 
