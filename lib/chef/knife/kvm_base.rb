@@ -55,7 +55,7 @@ class Chef
             :description => "Your KVM host address",
             :default => "127.0.0.1",
             :proc => Proc.new { |host| Chef::Config[:knife][:kvm_host] = host }
-          
+
           option :libvirt_protocol,
             :long => "--libvirt-protocol PROTO",
             :description => "Libvirt connection protocol (default SSH)",
@@ -67,7 +67,7 @@ class Chef
         Chef::Config[:knife][:kvm_username] = 'root' if not Chef::Config[:knife][:kvm_username]
         if not @connection
           host = Chef::Config[:knife][:kvm_host] || '127.0.0.1'
-          username = Chef::Config[:knife][:kvm_username] 
+          username = Chef::Config[:knife][:kvm_username]
           password = Chef::Config[:knife][:kvm_password]
           libvirt_uri = "qemu+#{config[:libvirt_protocol]}://#{username}@#{host}/system"
           ui.info "#{ui.color("Connecting to KVM host #{config[:kvm_host]} (#{config[:libvirt_protocol]})... ", :magenta)}"
@@ -78,7 +78,7 @@ class Chef
           @connection
         end
       end
-      
+
       def upload_file(source, dest, print_progress = true)
         Net::SSH.start(config[:kvm_host], config[:kvm_username], :password => config[:kvm_password]) do |ssh|
           puts "Uploading file... (#{File.basename(source)})"

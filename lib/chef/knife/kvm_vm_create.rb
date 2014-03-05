@@ -31,18 +31,18 @@ class Chef
       #---
       #:test1:
       #  'vm-memory':
-      #  'extra-args': 
+      #  'extra-args':
       #  'kvm-host':
-      #  'template-file': 
-      #  'vm-disk': 
+      #  'template-file':
+      #  'vm-disk':
       #  'ssh-user':
-      #  'ssh-password': 
-      #  'run-list': 
-      #  'network-interface': 
+      #  'ssh-password':
+      #  'run-list':
+      #  'network-interface':
       def initialize(batch_file)
         @batch_file = batch_file
         @jobs = []
-        @job_count = 0 
+        @job_count = 0
         (YAML.load_file batch_file).each do |i|
           @jobs << DeployJob.new(i)
           @job_count += 1
@@ -107,7 +107,7 @@ class Chef
         @err = ""
         optstring = []
         @options.each do |k,v|
-          optstring << "   - #{k}:".ljust(25) +  "#{v}\n" 
+          optstring << "   - #{k}:".ljust(25) +  "#{v}\n"
         end
         CLogger.instance.info! "Bootstrapping VM #{@name} \n#{optstring.join}"
         @status = Open4.popen4("knife kvm vm create --vm-name #{@name} #{args} #{extra_args}") do |pid, stdin, stdout, stderr|
@@ -122,7 +122,7 @@ class Chef
             CLogger.instance.error! "[#{@name}] #{l.chomp}"
           end
         end
-        return @status, @out, @err 
+        return @status, @out, @err
       end
 
     end
@@ -148,12 +148,12 @@ class Chef
       option :vm_name,
         :long => "--vm-name NAME",
         :description => "The Virtual Machine name"
-      
+
       option :pool,
         :long => "--pool NAME",
         :default => 'default',
         :description => "The Pool to use for the VM files (default: default)"
-      
+
       option :os_type,
         :long => "--os-type NAME",
         :default => "hvm",
@@ -203,7 +203,7 @@ class Chef
         :long => "--ssh-user USERNAME",
         :description => "The ssh username; default is 'root'",
         :default => "root"
-      
+
       option :ssh_password,
         :short => "-P PASSWORD",
         :long => "--ssh-password PASSWORD",
@@ -213,33 +213,33 @@ class Chef
         :short => "-i IDENTITY_FILE",
         :long => "--identity-file IDENTITY_FILE",
         :description => "The SSH identity file used for authentication"
-      
+
       option :no_host_key_verify,
         :long => "--no-host-key-verify",
         :description => "Disable host key verification",
         :boolean => true,
         :default => false,
         :proc => Proc.new { true }
-      
+
       option :skip_bootstrap,
         :long => "--skip-bootstrap",
         :description => "Skip bootstrap process (Deploy only mode)",
         :boolean => true,
         :default => false,
         :proc => Proc.new { true }
-      
+
       option :async,
         :long => "--async",
         :description => "Deploy the VMs asynchronously (Ignored unless combined with --batch)",
         :boolean => true,
         :default => false,
         :proc => Proc.new { true }
-      
+
       option :network_interface,
         :long => "--network-interface type:name",
         :description => "The network interface description (default bridge:br0)",
         :default => "bridge:br0"
-      
+
       option :batch,
         :long => "--batch script.yml",
         :description => "Use a batch file to deploy multiple VMs",
@@ -275,7 +275,7 @@ class Chef
             script.each_job do |job|
               counter += 1
               status, stdout, stderr = job.run
-              if status == 0 
+              if status == 0
                 puts 'Ok'
               else
                 puts 'Failed'
@@ -303,12 +303,12 @@ class Chef
           ui.error("You have not provided a valid QCOW2 file. (--vm-disk)")
           exit 1
         end
-        
+
         if not File.exist?(config[:vm_disk])
           ui.error("Invalid QCOW2 disk file (--vm-disk)")
           exit 1
         end
-        
+
         vm_name = config[:vm_name]
         if not vm_name
           ui.error("Invalid Virtual Machine name (--vm-name)")
@@ -335,11 +335,11 @@ class Chef
                           :network_bridge_name => net_if
 
         puts "#{ui.color("Importing VM disk... ", :magenta)}"
-        upload_file(vm_disk, "#{destination_path}/#{vm_name}.qcow2") 
+        upload_file(vm_disk, "#{destination_path}/#{vm_name}.qcow2")
         vm.start
-        
+
         puts "#{ui.color("VM Name", :cyan)}: #{vm.name}"
-        puts "#{ui.color("VM Memory", :cyan)}: #{vm.memory_size.to_i.kilobytes.to.megabytes.round} MB"
+        puts "#{ui.color("VM Memory", :cyan)}: #{vm.memory_size/1024} MB"
 
         return if config[:skip_bootstrap]
 
@@ -347,7 +347,7 @@ class Chef
         print "\n#{ui.color("Waiting server... ", :magenta)}"
         timeout = 100
         found = connection.servers.all.find { |v| v.name == vm.name }
-        loop do 
+        loop do
           begin
             if not vm.addresses.nil? and not vm.addresses.empty?
               puts
@@ -369,7 +369,7 @@ class Chef
         print "\n#{ui.color("Waiting for sshd... ", :magenta)}"
         print(".") until tcp_test_ssh(vm.public_ip_address) { sleep @initial_sleep_delay ||= 10; puts(" done") }
 
-        bootstrap_for_node(vm).run 
+        bootstrap_for_node(vm).run
 
         puts "\n"
         puts "#{ui.color("Name", :cyan)}: #{vm.name}"
@@ -383,7 +383,7 @@ class Chef
         bootstrap = Chef::Knife::Bootstrap.new
         bootstrap.name_args = [vm.public_ip_address]
         bootstrap.config[:run_list] = config[:run_list]
-        bootstrap.config[:ssh_user] = config[:ssh_user] 
+        bootstrap.config[:ssh_user] = config[:ssh_user]
         bootstrap.config[:identity_file] = config[:identity_file]
         bootstrap.config[:chef_node_name] = config[:chef_node_name] || vm.name
         bootstrap.config[:bootstrap_version] = locate_config_value(:bootstrap_version)

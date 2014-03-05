@@ -31,7 +31,7 @@ class Chef
         vm_table = table do |t|
           t.headings = %w{NAME STATE MAX_MEM CPUS OS_TYPE ARCH}
           connection.servers.each do |vm|
-            t << [vm.name, vm.state, "#{vm.memory_size.to_i.kilobytes.to.megabytes.round} MB", vm.cpus, vm.os_type, vm.arch]
+            t << [vm.name, vm.state, "#{vm.memory_size/1024} MB", vm.cpus, vm.os_type, vm.arch]
           end
         end
         puts vm_table
