@@ -91,6 +91,28 @@ class Chef
         puts if print_progress
       end
 
+      #
+      # This mmight work only for Ubuntu
+      # Directory: /etc/libvirt/qemu/autostart/ needs to be writable by kvm_username
+      #
+      def make_vm_autostart(name)
+        Net::SSH.start(config[:kvm_host], config[:kvm_username], :password => config[:kvm_password]) do |ssh|
+          puts "Making VM: #{name} autostart after machine shutdown."
+          ssh.exec("ln -sf /etc/libvirt/qemu/#{name}.xml /etc/libvirt/qemu/autostart/#{name}.xml")
+        end
+        puts if print_progress
+      end
+
+      #
+      # Download file from URL and saves it in iso_path
+      # Directory: iso_path needs to be writable by kvm_username
+      #
+      def download_file(url, iso_path)
+        Net::SSH.start(config[:kvm_host], config[:kvm_username], :password => config[:kvm_password]) do |ssh|
+          puts "Making VM: #{name} autostart after machine shutdown."
+          ssh.exec("curl #{url} > #{iso_path}")
+        end
+      end
 
       def locate_config_value(key)
         key = key.to_sym
