@@ -183,7 +183,7 @@ class Chef
 
 			option :vm_iso_dir,
 				:long => "--vm-iso-dir DIR",
-				:default => "/data/machines/iso"
+				:default => "/data/machines/iso",
 				:description => "Base directory for ISO images /data/machines/iso"
 
 			option :vm_iso_file,
@@ -385,6 +385,17 @@ class Chef
 				iso_dir = config[:vm_iso_dir]
 				iso_file = config[:vm_iso_file]
 
+				if config[:vm_disk_create].nil?
+					puts "#{ui.color("Importing VM disk... ", :magenta)}"
+					upload_file(vm_disk, "#{destination_path}/#{vm_name}.qcow2")
+				end
+
+
+				if not config[:vm_iso_url].nil?
+					puts "#{ui.color("Downloading iso File from URL: #{config[:vm_iso_url]} to #{iso_dir}/#{iso_file} ... ", :magenta)}"
+					download_file(config[:vm_iso_url], "#{iso_dir}/#{iso_file}")
+				end
+
 				#connection.remote_command "mkdir #{destination_path}"
 				puts "#{ui.color("Creating VM... ", :magenta)}"
 				net_type, net_if = config[:network_interface].split(':')
@@ -403,17 +414,7 @@ class Chef
 													:iso_dir => iso_dir,
 													:iso_file => iso_file
 
-				if config[:vm_disk_create].nil?
-					puts "#{ui.color("Importing VM disk... ", :magenta)}"
-					upload_file(vm_disk, "#{destination_path}/#{vm_name}.qcow2")
-				end
-
-				if not config[:vm_iso_url].nil?
-					puts "#{ui.color("Downloading iso File from URL: #{config[:vm_iso_url]} to #{iso_dir}/#{iso_file} ... ", :magenta)}"
-					download_file(config[:vm_iso_url], "#{iso_dir}/#{iso_file}")
-				end
-
-				if conffig[:autostart]
+				if config[:autostart]
 					puts "#{ui.color("Making VM autostart", :magenta)}"
 					make_vm_autostart(vm_name)
 				end

@@ -20,22 +20,17 @@ require 'chef/knife/kvm_base'
 
 class Chef
   class Knife
-    class KvmVmDelete < Knife
+    class KvmVmShutdown < Knife
 
       include Knife::KVMBase
 
-      banner "knife kvm vm delete VM_NAME [VM_NAME] (options)"
+      banner "knife kvm vm shutdown VM_NAME [VM_NAME] (options)"
 
-      option :force_delete,
-        :long => "--force-delete",
+      option :force_shutdown,
+        :long => "--force-shutdown",
         :boolean => true,
         :default => false,
-        :description => "Do not confirm VM deletion when yes"
-
-      option :shutdown_first,
-        :long => "--shutdown-first",
-        :default => false,
-        :description => "Try to shutdown machine first if it's running."
+        :description => "Force VM shutdown"
 
       option :shutdown_timeout,
         :long => "--shutdown-timeout",
@@ -43,18 +38,16 @@ class Chef
         :description => "Wait timeout for shutdown to wait for vm"
 
       def run
-        deleted = []
+        shutdown = []
         connection.servers.all.each do |vm|
           @name_args.each do |vm_name|
             if vm_name == vm.name
-              if config[:force_delete]
-                confirm("Do you really want to delete this virtual machine '#{vm.name}'")
+              if config[:force_shutdown] and vm.active?
+                confirm("Do you really want to shutdown this virtual machine '#{vm.name}'")
               end
 
-              unmake_vm_autostart(vm.name)
-
-              if config[:shutdown_first] and vm.active?
-                ui.info "#{ui.color(" Shuting down Virtual machine #{vm.name} before deletion ... ", :magenta)}"
+              if vm.active?
+                ui.info "#{ui.color(" Shuting down Virtual machine #{vm.name} ... ", :magenta)}"
                 vm.shutdown
                 time=0
                 #
@@ -67,14 +60,13 @@ class Chef
                 end
               end
 
-              vm.destroy :destroy_volumes => true
-              deleted << vm_name
-              ui.warn("Deleted virtual machine #{vm.name}")
+              shutdown << vm_name
+              ui.warn("Shutdown virtual machine #{vm.name}")
             end
           end
         end
         @name_args.each do |vm_name|
-          ui.warn "Virtual Machine #{vm_name} not found" if not deleted.include?(vm_name)
+          ui.warn "Virtual Machine #{vm_name} not found, it might be running still" if not shutdown.include?(vm_name)
         end
       end
 

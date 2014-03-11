@@ -100,7 +100,13 @@ class Chef
           puts "Making VM: #{name} autostart after machine shutdown."
           ssh.exec("ln -sf /etc/libvirt/qemu/#{name}.xml /etc/libvirt/qemu/autostart/#{name}.xml")
         end
-        puts if print_progress
+      end
+
+      def unmake_vm_autostart(name)
+        Net::SSH.start(config[:kvm_host], config[:kvm_username], :password => config[:kvm_password]) do |ssh|
+          puts "CleanIP VM: #{name} to do not autostart after machine shutdown."
+          ssh.exec("test -s /etc/libvirt/qemu/autostart/#{name}.xml && unlink /etc/libvirt/qemu/autostart/#{name}.xml")
+        end
       end
 
       #
@@ -109,7 +115,8 @@ class Chef
       #
       def download_file(url, iso_path)
         Net::SSH.start(config[:kvm_host], config[:kvm_username], :password => config[:kvm_password]) do |ssh|
-          puts "Making VM: #{name} autostart after machine shutdown."
+          ui.info "#{ui.color("Downloading iso image from #{url} to #{iso_path})... ", :magenta)}"
+          puts "Downloading iso image from #{url} to #{iso_path}"
           ssh.exec("curl #{url} > #{iso_path}")
         end
       end
