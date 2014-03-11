@@ -67,7 +67,7 @@ class Chef
                 end
               end
 
-              vm.destroy :destroy_volumes => true
+              vm.destroy(options = { :destroy_volumes => true })
               deleted << vm_name
               ui.warn("Deleted virtual machine #{vm.name}")
             end

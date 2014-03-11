@@ -194,7 +194,7 @@ class Chef
 				:long => "--vm-iso-url URL",
 				:description => "Is an URL from which ISO file will be downloaded to base_directory/filename"
 
-			option :cpus,
+			option :vm_cpus,
 				:long => "--vm-cpus CPUS",
 				:default => "1",
 				:description => "Number of VM cpus in VM"
@@ -280,7 +280,7 @@ class Chef
 				:long => "--skip-bootstrap",
 				:description => "Skip bootstrap process (Deploy only mode)",
 				:boolean => true,
-				:default => false,
+				:default => true,
 				:proc => Proc.new { true }
 
 			option :async,
@@ -422,7 +422,10 @@ class Chef
 				vm.start
 
 				puts "#{ui.color("VM Name", :cyan)}: #{vm.name}"
+				puts "#{ui.color("VM Architecture", :cyan)}: #{vm.arch}"
 				puts "#{ui.color("VM Memory", :cyan)}: #{vm.memory_size/1024} MB"
+				puts "#{ui.color("VM Cpus", :cyan)}: #{vm.cpus}"
+				puts "#{ui.color("VM Disk Size", :cyan)}: #{vm.volume_capacity}"
 
 				return if config[:skip_bootstrap]
 
