@@ -1,3 +1,7 @@
+= NO LONGER MAINTAINED
+
+See https://github.com/chef/knife-kvm for a better and actively maintained gem.
+
 = Knife KVM
 
 http://github.com/rubiojr/knife-kvm
