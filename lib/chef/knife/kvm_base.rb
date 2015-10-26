@@ -91,6 +91,18 @@ class Chef
         puts if print_progress
       end
 
+      def copy_file(source, dest, print_progress = true)
+          puts "Copying file... (#{File.basename(source)})"
+          FileUtils.cp(source, dest) do |ch, name, sent, total|
+            if print_progress
+              print "\rProgress: #{(sent.to_f * 100 / total.to_f).to_i}% completed"
+            end
+          end
+        end
+        puts if print_progress
+      end
+
+
 
       def locate_config_value(key)
         key = key.to_sym
